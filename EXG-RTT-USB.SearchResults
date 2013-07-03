@@ -1,0 +1,5 @@
+---- USB_Rx_Buffer Matches (4 in 1 files) ----
+Usbd_cdc_core.c (usb\device\class\cdc\src):__ALIGN_BEGIN uint8_t USB_Rx_Buffer   [CDC_DATA_MAX_PACKET_SIZE] __ALIGN_END ;
+Usbd_cdc_core.c (usb\device\class\cdc\src):                   (uint8_t*)(USB_Rx_Buffer),
+Usbd_cdc_core.c (usb\device\class\cdc\src):  APP_FOPS.pIf_DataRx(USB_Rx_Buffer, USB_Rx_Cnt);
+Usbd_cdc_core.c (usb\device\class\cdc\src):                   (uint8_t*)(USB_Rx_Buffer),

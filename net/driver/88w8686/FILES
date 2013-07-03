@@ -1,0 +1,4 @@
+*.c *.h     --  Abstracts common firmware APIs
+gspi        --  Folder contains gspi related driver code
+sdio        --  Floder contains sdio related driver code
+obsolete    --  Folder that contains obsolete code
