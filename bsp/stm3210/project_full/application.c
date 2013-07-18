@@ -27,6 +27,7 @@
 #include "exg_io.h"
 #include "ad7947.h"
 #include "adInternal.h"
+#include "Softwarespi.h"
 #include "led.h"
 #include "exg_api.h"
 #include "exg_data_buffer.h"
@@ -35,6 +36,8 @@
 #include "usbd_usr.h"
 #include "usb_conf.h"
 #include "usbd_desc.h"
+#include "stm32f10x_exti.h"
+#include "sensor701.h"
 
 #ifdef CONNECT_TO_ANDROID
 #include "adb.h"
@@ -78,8 +81,6 @@ int lines_idx = 0;
 /* ADC sample updated by TIMER4 */
 uint16_t adc_current;
 int usb_connection_open = 0;
-volatile int hz = 100;
-volatile int hz_config = 100;
 
 // debug PC send count
 int pc_send_count = 0;
@@ -240,19 +241,17 @@ void rt_usbd_process (void *parameter)
 
 void rt_vcp_process(void *parameter)
 {
-    uint8_t buf[32] = {0};;
-    buf[0]=0;
-    buf[31] = 0xff;
+    uint8_t localSendBuf[21] = {0};
+    struct exg_db *pStrucDb = NULL;
     while(1)
     {
-        if(u8VCPSendEnable == 1)
+        pStrucDb = DBGetNextBufferForUSB();
+        if (pStrucDb)
         {
-            //rt_thread_delay(10);
-            rt_kprintf("Send one packet\n");
-            APP_FOPS.pIf_DataTx(buf,32);
-            buf[0] ++;
-            u8VCPSendEnable = 0;
-        }
+            memcpy(localSendBuf, pStrucDb->buffer, 21);
+            APP_FOPS.pIf_DataTx(localSendBuf,21);
+            DBPutBuffer(pStrucDb); 
+        }   
     }
 }
 
@@ -260,7 +259,10 @@ void rt_init_thread_entry(void* parameter)
 {										  		    
     char ch;
     int sample_idx;
-    int tmp_hz;		  
+    int tmp_hz;	
+    uint8_t intBuf[5];
+    uint8_t i = 0;
+    uint32_t tmpreg;
 #ifdef CONNECT_TO_ANDROID
     rt_thread_t usbh_process_thread;
 #endif
@@ -288,17 +290,17 @@ void rt_init_thread_entry(void* parameter)
 #endif
 
     /* Initialize EXG IO control and AD7988 */
-    //DBInit();
+    DBInit();
     USBD_Init(&USB_OTG_dev,   USB_OTG_FS_CORE_ID,  &USR_desc,  &USBD_CDC_cb,  &USR_cb);
-    exg_io_init();
+    //exg_io_init();
     rt_hw_led_init();
 
-    AdInter_init();
-    //exg_set_nstart(); 
-    //exg_trigger_start();
-    //exg_set_channel(2);
-    rt_hw_led_on(0);
-    rt_hw_led_on(1);
+    //AdInter_init();
+    softwareSPIInit();
+    sensor701Init();
+    //Get_tem_spi_701(intBuf);
+    //rt_hw_led_on(0);
+    //rt_hw_led_on(1);
 
     vcp_process_thread = rt_thread_create("vcp_process", rt_vcp_process, RT_NULL, 2048, 20, 10);
     if (vcp_process_thread != RT_NULL)
@@ -349,31 +351,47 @@ void rt_init_thread_entry(void* parameter)
             if (ch == '\r' || ch == '\n')		  
             {
                 if (lines[0] == 's') {
-                    //rt_kprintf("    Stop 32K\n");
                     //exg_stop_32k();
-                    u8VCPSendEnable = 0;
+                    //u8VCPSendEnable = 0;
                     DBDebugStatistics();
-                } else if (lines[0] == 'S') {
-                    rt_kprintf("    Start 32K\n");
-                    u8VCPSendEnable = 1;
-                    exg_start_32k();
-                } else if (lines[0] == 't') {
-                    rt_kprintf("    Trigger start signal\n");
-                    exg_trigger_start();
+
+                    //SDA send one bit and switch to read mode
+                    //Test if it can successfully read
+                    //PLEASE connect two pin together to test!!!
+                }
+                else if (lines[0] == 'S') {
+                    rt_kprintf("   Get MOSI \n");
+                    //u8VCPSendEnable = 1;
+                    //exg_start_32k();
+                    
+                } else if (lines[0] == 'w') {
+                    rt_kprintf(" write addr 0x0f\n");
+                    CS_LOW();
+                    SDA_W();
+                    SPI_sendb(0x80);
+                    SPI_sendb(0x0F);
+                    CS_HIGH();
+                    EXTI_GenerateSWInterrupt(EXTI_Line0);
+                    //exg_trigger_start();
                 } else if (lines[0] >= '0' && lines[0] <= '3') {
                     rt_kprintf("    Set gain to %d\n", (lines[0] - '0'));
-                    exg_set_gain((lines[0] - '0'));
+                    //exg_set_gain((lines[0] - '0'));
                 } else if (lines[0] == 'r') {
-                    tmp_hz = 0;
-                    sample_idx = 1;
-                    while (lines[sample_idx] != 'x') {
-                        tmp_hz *= 10;
-                        tmp_hz += (lines[sample_idx] - '0');
-                        sample_idx++;
-                    }
-                    hz_config = tmp_hz;
-                    rt_kprintf("    Set hz to %d\n", hz_config);
-                } else {
+                    CS_LOW();
+                    SDA_R();
+                    i = SPI_rcvb();
+                    CS_HIGH();
+                    rt_kprintf(" read back data 0x%x\n", i);
+                } else if(lines[0] == 'y')
+                {
+                    rt_thread_delay(20);
+                    intBuf[0] = 0;
+                    intBuf[1] = 0;
+                    intBuf[2] = 0;
+                    Get_tem_spi_701(intBuf);
+                    rt_kprintf("\nSecond Value is 0x%x 0x%x 0x%x\n", intBuf[0],intBuf[1], intBuf[2]);
+                }
+                    else {
                     rt_kprintf("Unrecognized command\n's' for stop 32K\n'S' for start 32K\n"
                             "'t' for trigger start signal\n'0'-'3' for gain 0~3\n");
                 }

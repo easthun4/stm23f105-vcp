@@ -195,7 +195,7 @@ static uint8_t __DBReserveBuffer(uint8_t uLen)
  * Invoked by ADC sampling routine to push
  * EXG generated data
  */
-static void __DBPushBuffer(uint8_t *pBuf, uint8_t uLen)
+static void __DBPushBuffer(uint8_t *pBuf, uint8_t *ghost_ptr, uint8_t uLen)
 {
     uint16_t usTmp = 0;
 
@@ -210,6 +210,8 @@ static void __DBPushBuffer(uint8_t *pBuf, uint8_t uLen)
         // The remaining seats in the db enough
         memcpy(&(__db[__db_push_idx].buffer[__db[__db_push_idx].next_buffer_idx]), 
                     pBuf, uLen);
+        memcpy(&(__db[__db_push_idx].ghost_buffer[__db[__db_push_idx].next_buffer_idx]), 
+                    ghost_ptr, uLen);
         __db_stat_in_use_bytes += uLen;
         __db_stat_free_bytes -= uLen;
         __db[__db_push_idx].next_buffer_idx += uLen;
@@ -227,9 +229,12 @@ static void __DBPushBuffer(uint8_t *pBuf, uint8_t uLen)
         usTmp = (DB_BYTES_PER_BUFFER - __db[__db_push_idx].next_buffer_idx);
         memcpy(&(__db[__db_push_idx].buffer[__db[__db_push_idx].next_buffer_idx]), 
                     pBuf, usTmp);
+        memcpy(&(__db[__db_push_idx].ghost_buffer[__db[__db_push_idx].next_buffer_idx]), 
+                    ghost_ptr, usTmp);
         __db_stat_in_use_bytes += usTmp;
         __db_stat_free_bytes -= usTmp;
         pBuf += usTmp;
+        ghost_ptr += usTmp;
         uLen -= usTmp;
         __db[__db_push_idx].next_buffer_idx = DB_BYTES_PER_BUFFER;
         // Invoke general GetBuffer
@@ -241,7 +246,7 @@ static void __DBPushBuffer(uint8_t *pBuf, uint8_t uLen)
             rt_kprintf("BUG %s line %d\n", __FUNCTION__, __LINE__);
             return;
         }
-        __DBPushBuffer(pBuf, uLen);
+        __DBPushBuffer(pBuf, ghost_ptr, uLen);
     }
 }
 
@@ -376,6 +381,15 @@ void DBPutBuffer (struct exg_db *pDb)
 void DBPushBuffer (uint8_t *pBuf, uint8_t uLen)
 {
     // First reserve resource
+    uint8_t ghost_info[18] = {0x84, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x04, 0xB0,
+                              0x00, 0x00};
 
     if (unlikely(__db_stat_free_bytes < uLen)) {
         if (unlikely(uLen > DB_MAX_SIZE)) {
@@ -389,7 +403,7 @@ void DBPushBuffer (uint8_t *pBuf, uint8_t uLen)
             return;
         } 
     }
-    __DBPushBuffer(pBuf, uLen);
+    __DBPushBuffer(pBuf, ghost_info, uLen);
 }
 
 /*

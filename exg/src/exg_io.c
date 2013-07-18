@@ -87,7 +87,7 @@ static void GPIO_Configuration (void)
     GPIO_InitStructure.GPIO_Pin = (uint16_t)(MUX0Pin|MUX1Pin|MUX2Pin|MUX3Pin);
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 }
 

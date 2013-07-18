@@ -35,6 +35,7 @@
 #include "ad7947.h"
 #include "adInternal.h"
 #include "exg_io.h"
+#include "Sensor701.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -318,14 +319,15 @@ void EXTI0_IRQHandler(void)
     /* enter interrupt */
     rt_interrupt_enter();
 
-    enc28j60_isr();
-
+    //enc28j60_isr();
+    
     /* Clear the Key Button EXTI line pending bit */
     EXTI_ClearITPendingBit(EXTI_Line0);
 
     /* leave interrupt */
     rt_interrupt_leave();
 }
+
 #endif
 
 #if (STM32_ETH_IF == 1)
@@ -366,7 +368,7 @@ void EXTI15_10_IRQHandler (void)
 
 void DMA1_Channel1_IRQHandler(void)
 {
-    AD_DMA_Handler();
+    //AD_DMA_Handler();
 }
 
 void DMA1_Channel4_IRQHandler(void)
@@ -411,6 +413,7 @@ void TIM3_IRQHandler(void)
 #ifdef CONNECT_TO_ANDROID
 	usb_trans_timeout_handler(&usb_host_reg);
 #endif
+    //AD_timer_handler();	
 }
 
 /*
@@ -418,17 +421,36 @@ void TIM3_IRQHandler(void)
  */
 void TIM4_IRQHandler (void)
 {
-	AD_timer_handler();						
+	//AD_timer_handler();						
+	Senso701_timer_handler();
 }
 
 void TIM6_IRQHandler (void)
 {
-	exg_start_signal_handler();
+	//exg_start_signal_handler();
 }
 
 void ADC1_2_IRQHandler (void)
 {
-	AD_SmplFinish_handler();
+	//AD_SmplFinish_handler();
+}
+
+/*******************************************************************************
+* Function Name  : EXTI0_IRQHandler
+* Description    : This function handles External interrupt Line 0 request.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void EXTI0_IRQHandler(void)
+{
+    /* enter interrupt */
+    rt_interrupt_enter();
+
+    Sensor701_Pressure_INT();
+
+    /* leave interrupt */
+    rt_interrupt_leave();
 }
 
 /**

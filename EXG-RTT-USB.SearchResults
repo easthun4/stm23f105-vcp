@@ -1,5 +1,13 @@
----- USB_Rx_Buffer Matches (4 in 1 files) ----
-Usbd_cdc_core.c (usb\device\class\cdc\src):__ALIGN_BEGIN uint8_t USB_Rx_Buffer   [CDC_DATA_MAX_PACKET_SIZE] __ALIGN_END ;
-Usbd_cdc_core.c (usb\device\class\cdc\src):                   (uint8_t*)(USB_Rx_Buffer),
-Usbd_cdc_core.c (usb\device\class\cdc\src):  APP_FOPS.pIf_DataRx(USB_Rx_Buffer, USB_Rx_Cnt);
-Usbd_cdc_core.c (usb\device\class\cdc\src):                   (uint8_t*)(USB_Rx_Buffer),
+---- tempUpdateRate Matches (12 in 3 files) ----
+Sensor701.c (exg\src):uint16_t tempUpdateRate = 0;
+Sensor701.c (exg\src):            if(tempReadTick > tempUpdateRate)
+Sensor701.h (exg\include):extern uint16_t tempUpdateRate = 0;
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):            (currentChannel>2)?(tempUpdateRate=600):(pressureUpdateRate=300);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=300):(pressureUpdateRate=150);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=200):(pressureUpdateRate=100);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=50);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
+Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=1);

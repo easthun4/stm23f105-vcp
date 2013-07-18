@@ -3,7 +3,6 @@
  */
 
 #include "ad7947.h"
-#include "stm32_hcd.h"
 #include "exg_api.h"
 
 ad7947_callback *adc_handler = RT_NULL;
