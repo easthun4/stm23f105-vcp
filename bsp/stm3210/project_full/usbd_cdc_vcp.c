@@ -313,7 +313,7 @@ static uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
             readConfig |=(0x03);
             break;
         case '4':
-             (gCurChannel>2)?(tempUpdateRate=6):(pressureUpdateRate=25);
+             (gCurChannel>2)?(tempUpdateRate=12):(pressureUpdateRate=25);
             readConfig |=(0x04);
             break;
         case '5':

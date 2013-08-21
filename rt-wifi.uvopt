@@ -1112,10 +1112,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>38</ColumnNumber>
+      <ColumnNumber>58</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>354</TopLine>
-      <CurrentLine>354</CurrentLine>
+      <CurrentLine>373</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\bsp\stm3210\project_full\usbd_cdc_vcp.c</PathWithFileName>
       <FilenameWithoutPath>usbd_cdc_vcp.c</FilenameWithoutPath>
@@ -1975,9 +1975,9 @@
         </Doc>
         <Doc>
           <Name>.\bsp\stm3210\project_full\usbd_cdc_vcp.c</Name>
-          <ColumnNumber>38</ColumnNumber>
+          <ColumnNumber>58</ColumnNumber>
           <TopLine>354</TopLine>
-          <CurrentLine>354</CurrentLine>
+          <CurrentLine>373</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\bsp\stm3210\project_full\stm32f10x_it.c</Name>
