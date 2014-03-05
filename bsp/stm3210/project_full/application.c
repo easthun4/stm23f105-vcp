@@ -19,6 +19,7 @@
 
 #include <board.h>
 #include <rtthread.h>
+#include <string.h>
 
 #ifdef CONNECT_TO_ANDROID
 #include "usbh_core.h"
@@ -27,7 +28,7 @@
 #include "exg_io.h"
 #include "ad7947.h"
 #include "adInternal.h"
-#include "Softwarespi.h"
+#include "SoftSPIAdc.h"
 #include "led.h"
 #include "exg_api.h"
 #include "exg_data_buffer.h"
@@ -258,11 +259,11 @@ void rt_vcp_process(void *parameter)
 void rt_init_thread_entry(void* parameter)
 {										  		    
     char ch;
-    int sample_idx;
-    int tmp_hz;	
+    //int sample_idx;
+    //int tmp_hz;	
     uint8_t intBuf[5];
     uint8_t i = 0;
-    uint32_t tmpreg;
+    //uint32_t tmpreg;
 #ifdef CONNECT_TO_ANDROID
     rt_thread_t usbh_process_thread;
 #endif
@@ -367,9 +368,9 @@ void rt_init_thread_entry(void* parameter)
                 } else if (lines[0] == 'w') {
                     rt_kprintf(" write addr 0x0f\n");
                     CS_LOW();
-                    SDA_W();
-                    SPI_sendb(0x80);
-                    SPI_sendb(0x0F);
+                    
+                    //SPI_sendb(0x80);
+                    //SPI_sendb(0x0F);
                     CS_HIGH();
                     EXTI_GenerateSWInterrupt(EXTI_Line0);
                     //exg_trigger_start();
@@ -378,8 +379,8 @@ void rt_init_thread_entry(void* parameter)
                     //exg_set_gain((lines[0] - '0'));
                 } else if (lines[0] == 'r') {
                     CS_LOW();
-                    SDA_R();
-                    i = SPI_rcvb();
+                    
+                    i = 0; //SPI_rcvb();
                     CS_HIGH();
                     rt_kprintf(" read back data 0x%x\n", i);
                 } else if(lines[0] == 'y')

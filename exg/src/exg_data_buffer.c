@@ -2,6 +2,8 @@
  * EXG Data Buffer Management Routines
  */
 #include "exg_data_buffer.h"
+#include "Rthw.h"
+#include <string.h>
 
 /*
  * DB related static states
@@ -189,6 +191,7 @@ static uint8_t __DBReserveBuffer(uint8_t uLen)
 
     /* enable interrupt */
 	rt_hw_interrupt_enable(temp);
+    return DB_SUCCESS;
 }
 
 /*

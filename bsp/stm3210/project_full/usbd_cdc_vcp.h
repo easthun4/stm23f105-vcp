@@ -60,10 +60,8 @@ typedef struct
 #define OTHER_CONFIG                    1
 
 /* Exported macro ------------------------------------------------------------*/
-extern uint8_t gParameterReset;
-extern uint8_t gCurChannel;
 /* Exported functions ------------------------------------------------------- */
-
+extern uint8_t paraSetLock;
 
 #endif /* __USBD_CDC_VCP_H */
 

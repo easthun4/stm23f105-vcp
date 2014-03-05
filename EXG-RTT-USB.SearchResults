@@ -1,13 +1,3 @@
----- tempUpdateRate Matches (12 in 3 files) ----
-Sensor701.c (exg\src):uint16_t tempUpdateRate = 0;
-Sensor701.c (exg\src):            if(tempReadTick > tempUpdateRate)
-Sensor701.h (exg\include):extern uint16_t tempUpdateRate = 0;
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):            (currentChannel>2)?(tempUpdateRate=600):(pressureUpdateRate=300);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=300):(pressureUpdateRate=150);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=200):(pressureUpdateRate=100);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=50);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=25);
-Usbd_cdc_vcp.c (bsp\stm3210\project_full):             (currentChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=1);
+---- rtthread_startup Matches (2 in 1 files) ----
+Startup.c (bsp\stm3210\project_full):void rtthread_startup(void)
+Startup.c (bsp\stm3210\project_full):	rtthread_startup();	   

@@ -421,8 +421,10 @@ void TIM3_IRQHandler(void)
  */
 void TIM4_IRQHandler (void)
 {
-	//AD_timer_handler();						
+	//AD_timer_handler();	
+	rt_interrupt_enter();
 	Senso701_timer_handler();
+     rt_interrupt_leave();
 }
 
 void TIM6_IRQHandler (void)

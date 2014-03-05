@@ -342,6 +342,16 @@ void Get_tem_spi_701 (uint8_t *P)
 //	return;
 }
 
+void GetRegData(uint8_t *P, uint8_t adr)
+{
+    *P = SPI_read_b_test(adr);
+}
+
+void SetRegData(uint8_t adr, uint8_t val)
+{
+    SPI_write_b_test(adr, val);
+}
+
 void testIOHighLow(void)
 {
     SDA_R();

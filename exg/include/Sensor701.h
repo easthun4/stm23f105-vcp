@@ -33,8 +33,14 @@ void sensorWriteByte (uint8_t addr, uint8_t dat);
  void Senso701_timer_handler (void) ;
 void Sensor701_Pressure_INT(void);
 
+void SetChannel(uint8_t Ch);
+void SetGainUdr(uint8_t gain, uint8_t udr);
+
+
 //Exported variable
 extern uint16_t tempUpdateRate;
 extern uint16_t pressureUpdateRate;
+extern uint8_t restParaNum;
+extern uint8_t allRegMode;
 
 #endif

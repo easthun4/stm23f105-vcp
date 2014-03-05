@@ -32,7 +32,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_vcp.h"
 #include "usb_conf.h"
-#include "SoftwareSPI.h"
+#include "SoftSPIAdc.h"
 #include "Sensor701.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,6 +47,7 @@ LINE_CODING linecoding =
     0x08    /* nb. of bits 8*/
   };
 
+uint8_t paraSetLock = 0;
 
 //USART_InitTypeDef USART_InitStructure;
 
@@ -67,10 +68,6 @@ static uint16_t VCP_DataTx   (uint8_t* Buf, uint32_t Len);
 static uint16_t VCP_DataRx   (uint8_t* Buf, uint32_t Len);
 
 static uint16_t VCP_COMConfig(uint8_t Conf);
-
-uint8_t gParameterReset = 0;
-uint8_t gCurChannel = 3;
-
 
 CDC_IF_Prop_TypeDef VCP_fops = 
 {
@@ -251,118 +248,60 @@ static uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len)
   */
 static uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 {
-  uint8_t tempreture[5];
-  uint8_t readConfig = 0;
+    paraSetLock = 1;
+  //uint8_t tempreture[5];
+  //uint8_t readConfig = 0;
+  //uint8_t index = 0;
     //Buf[2] gain
     //Buf[3] channel
     //Buf[4] Rate
     //Set Gain
   //Buf[0],Buf[1] = 'FC'  Command
   //Buf[0],Buf[1] = 'TE'  Tempreture Read
-  gCurChannel = Buf[3]-'0';
+
+  //All Reg mode defines data retrive protocol
+  //Buffer    AllRegMode     Function
+  //'FC'      0              Setting working mode;using Timer to read
+  // 3F 02    1              Read all reg
+  // 3F 03    1              Write single reg
+  // 3F 10    1              Only Setting all reg mode
+  // 3F 11    2              Setting AllRegMode 2; using Int1 to read
   if(Buf[0] == 'F' && Buf[1] == 'C')
   {
-    readConfig = SPI_read_b_test(0x0E);
-    readConfig &= !(0x7F);
-    switch(Buf[2])
-    {
-        case '0':
-            readConfig |=(0x00);
-            break;
-        case '1':
-            readConfig |=(0x10);
-            break;
-        case '2':
-            readConfig |=(0x20);
-            break;
-        case '3':
-            readConfig |=(0x30);
-            break;
-        case '4':
-            readConfig |=(0x40);
-            break;
-        case '5':
-            readConfig |=(0x50);
-            break;
-        case '6':
-            readConfig |=(0x60);
-            break;
-        case '7':
-            readConfig |=(0x70);
-            break;
-        default:
-            break;  
-    }
-    //Setting Rate
-    switch(Buf[4])
-    {
-        case '0':
-            readConfig |=(0x00);
-            (gCurChannel>2)?(tempUpdateRate=200):(pressureUpdateRate=100);
-            break;
-        case '1':
-             (gCurChannel>2)?(tempUpdateRate=100):(pressureUpdateRate=50);
-            readConfig |=(0x01);
-            break;
-        case '2':
-             (gCurChannel>2)?(tempUpdateRate=50):(pressureUpdateRate=40);
-            readConfig |=(0x02);
-            break;
-        case '3':
-             (gCurChannel>2)?(tempUpdateRate=12):(pressureUpdateRate=30);
-            readConfig |=(0x03);
-            break;
-        case '4':
-             (gCurChannel>2)?(tempUpdateRate=12):(pressureUpdateRate=25);
-            readConfig |=(0x04);
-            break;
-        case '5':
-             (gCurChannel>2)?(tempUpdateRate=6):(pressureUpdateRate=12);
-            readConfig |=(0x05);
-            break;
-        case '6':
-             (gCurChannel>2)?(tempUpdateRate=6):(pressureUpdateRate=6);
-            readConfig |=(0x06);
-            break;
-        case '7':
-             (gCurChannel>2)?(tempUpdateRate=6):(pressureUpdateRate=3);
-            readConfig |=(0x07);
-            break;
-        case '8':
-             (gCurChannel>2)?(tempUpdateRate=6):(pressureUpdateRate=1);
-            readConfig |=(0x08);
-            break;
-        default:
-            break;  
-    }
-    SPI_write_b_test(0x0E, readConfig);
-    rt_kprintf("Setting Gain,Rate 0x%x\n", SPI_read_b_test(0x0E));
-
-    //Setting Channel
-    readConfig = SPI_read_b_test(0x0B);
-    readConfig &= ~(0x73);
-    switch(gCurChannel)
-    {
-        case 0:
-            readConfig |=(0x00);
-            break;
-        case 1:
-            readConfig |=(0x01);
-            break;
-        case 2:
-            readConfig |=(0x02);
-            break;
-        case 3:
-            readConfig |=(0x20);
-            break;
-        default:
-            break;  
-    }
-    SPI_write_b_test(0x0B, readConfig);    
-    rt_kprintf("Setting Channel 0x%x\n", SPI_read_b_test(0x0B));
-
-    gParameterReset = 1;
+    allRegMode = 0;
+    SetChannel(Buf[3] - '0');
+    SetGainUdr(Buf[2], Buf[4]);
   }  
+  else if (0x3F==Buf[0] && 0x02==Buf[1])
+  {
+    //Read all register in sensor; using timer4;
+    allRegMode = 1;
+    restParaNum = 0;
+  }
+  else if(0x3F==Buf[0] && 0x05==Buf[1])
+  {
+    allRegMode = 3;
+    restParaNum = Buf[2];
+  }
+  else if (0x3F==Buf[0] && 0x03==Buf[1])
+  {
+    //Write all register in sensor
+    //Buf[2]; adr
+    //Buf[3]; value
+    allRegMode = 1;
+    SetRegData(Buf[3], Buf[4]);
+  }
+  else if(0x3F==Buf[0] && 0x10==Buf[1])
+  {
+    allRegMode = 1;
+  }
+  else if(0x3F==Buf[0] && 0x11==Buf[1])
+  {
+    allRegMode = 2;
+    SetChannel(Buf[3] - '0');
+     SetGainUdr(Buf[2], Buf[4]);
+  }
+  paraSetLock = 0;
   return USBD_OK;
 }
 

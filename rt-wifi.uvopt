@@ -1112,10 +1112,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>58</ColumnNumber>
+      <ColumnNumber>78</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>354</TopLine>
-      <CurrentLine>373</CurrentLine>
+      <TopLine>469</TopLine>
+      <CurrentLine>477</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\bsp\stm3210\project_full\usbd_cdc_vcp.c</PathWithFileName>
       <FilenameWithoutPath>usbd_cdc_vcp.c</FilenameWithoutPath>
@@ -1833,10 +1833,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>24</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>1</CurrentLine>
+      <TopLine>174</TopLine>
+      <CurrentLine>174</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\exg\src\Sensor701.c</PathWithFileName>
       <FilenameWithoutPath>Sensor701.c</FilenameWithoutPath>
@@ -1953,7 +1953,7 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>3</ActiveTab>
+      <ActiveTab>2</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\libcpu\arm\stm32\start_rvds.S</Name>
@@ -1969,15 +1969,15 @@
         </Doc>
         <Doc>
           <Name>.\exg\src\Sensor701.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>1</CurrentLine>
+          <ColumnNumber>24</ColumnNumber>
+          <TopLine>174</TopLine>
+          <CurrentLine>174</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\bsp\stm3210\project_full\usbd_cdc_vcp.c</Name>
-          <ColumnNumber>58</ColumnNumber>
-          <TopLine>354</TopLine>
-          <CurrentLine>373</CurrentLine>
+          <ColumnNumber>78</ColumnNumber>
+          <TopLine>469</TopLine>
+          <CurrentLine>477</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\bsp\stm3210\project_full\stm32f10x_it.c</Name>
