@@ -31,25 +31,18 @@ import operator
 import itertools
 import _winreg
 import datetime
+from ParaPanel import ParaPanel
 
-sensor_data_lock = threading.Lock()
-temperature_data = []
-pressure_data = []
-
-cmd_write = None
-gSerialDev = None
-TempretureResult = 0
-
-isReadExit = True
-isWriteExit = True
+#global data
+import gd
 
 # The recommended way to use wx with mpl is with the WXAgg
 # backend.
 #
-import matplotlib
-matplotlib.use('WXAgg')
-from matplotlib.figure import Figure
+#import matplotlib
+#matplotlib.use('WXAgg')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigCanvas, NavigationToolbar2WxAgg as NavigationToolbar
+from matplotlib.figure import Figure
 import numpy as np
 import pylab
 
@@ -62,21 +55,17 @@ class DataGen(object):
         self.graph = graph
 
     def next_pressure(self):
-        global sensor_data_lock
-        global pressure_data
-        sensor_data_lock.acquire()
-        buf = pressure_data
-        pressure_data = []
-        sensor_data_lock.release()
+        gd.sensor_data_lock.acquire()
+        buf = gd.pressure_data
+        gd.pressure_data = []
+        gd.sensor_data_lock.release()
         return buf
 
     def next_temperature(self):
-        global sensor_data_lock
-        global temperature_data
-        sensor_data_lock.acquire()
-        buf = temperature_data
-        temperature_data = []
-        sensor_data_lock.release()
+        gd.sensor_data_lock.acquire()
+        buf = gd.temperature_data
+        gd.temperature_data = []
+        gd.sensor_data_lock.release()
         return buf
 
 
@@ -161,7 +150,7 @@ class GraphFrame(wx.Frame):
         self.plot_data = []
         self.canvas = []
         for idx in range(0, self.channel_count):
-            self.fig.append(Figure((3.0, 3.0), dpi=self.dpi))
+            self.fig.append(Figure((4.0, 3.0), dpi=self.dpi))
             #self.fig.append(matplotlib.figure.Figure())
 
             self.axes.append(self.fig[idx].add_subplot(111))
@@ -184,12 +173,17 @@ class GraphFrame(wx.Frame):
                 )[0])
             self.canvas.append(FigCanvas(self.panel, -1, self.fig[idx]))
         
+        #Get all parameter button
+        getAllPara = wx.Button(self.panel, -1, "SeeAllParameter")
+        self.Bind(wx.EVT_BUTTON, self.OnClickGetAll, getAllPara)
         #Close button
         button = wx.Button(self.panel, -1, "Close")
         self.Bind(wx.EVT_BUTTON, self.OnClickClose, button)
         #Set button
         setParaButton = wx.Button(self.panel, -1, "Set")
         self.Bind(wx.EVT_BUTTON, self.OnClickSetPara, setParaButton)
+        setIntMode = wx.Button(self.panel, -1, "Int Mode")
+        self.Bind(wx.EVT_BUTTON, self.OnClickSetIntMode, setIntMode)
         #Save button
         self.saveButton = wx.ToggleButton(self.panel, -1, "Save")
         self.Bind(wx.EVT_TOGGLEBUTTON, self.OnClickSaveToFile, self.saveButton)
@@ -232,7 +226,9 @@ class GraphFrame(wx.Frame):
         self.SensorHbox.Add(wx.StaticText(self.panel, -1, "Tempreture", (0, 0), (10, 10), wx.ALIGN_CENTER), 1, wx.EXPAND)
         self.SensorHbox.Add(self.TempretureText, 1, wx.EXPAND)
 
+        self.buttonHbox.Add(getAllPara, 1, wx.EXPAND)
         self.buttonHbox.Add(setParaButton, 1, wx.EXPAND)
+        self.buttonHbox.Add(setIntMode, 1, wx.EXPAND)
         self.buttonHbox.Add(self.saveButton, 1, wx.EXPAND)
         self.buttonHbox.Add(button, 1, wx.EXPAND)
 
@@ -251,8 +247,8 @@ class GraphFrame(wx.Frame):
             # sliding window effect. therefore, xmin is assigned after
             # xmax.
             #
-            xmax = len(self.data[idx]) if len(self.data[idx]) > 500 else 500
-            xmin = xmax - 500
+            xmax = len(self.data[idx]) if len(self.data[idx]) > 1000 else 1000
+            xmin = xmax - 1000
 
             # for ymin and ymax, find the minimal and maximal values
             # in the data set and add a mininal margin.
@@ -366,7 +362,6 @@ class GraphFrame(wx.Frame):
         self.statusbar.SetStatusText('')
 
     def OnClickSetPara(self, event):
-        global cmd_write
         gain_max = 7
         channel_max = 3
         rate_max = 8
@@ -384,11 +379,30 @@ class GraphFrame(wx.Frame):
         if string.atoi(rate)>rate_max:
             rate = rate_max
             self.RateText.SetValue(str(rate_max))
-        while cmd_write!=None:
+        while gd.cmd_write!=None:
             #wait until previous send finished.
             pass
-        cmd_write = 'FC' + str(gain)+str(channel)+str(rate)
+        gd.cmd_write = 'FC' + str(gain)+str(channel)+str(rate)
 
+    def OnClickSetIntMode(self, event):
+        gain_max = 7
+        channel_max = 3
+        rate_max = 8
+        gain = self.GainText.GetValue()
+        channel = self.ChannelText.GetValue()
+        rate = self.RateText.GetValue()
+        if string.atoi(gain)>gain_max:
+            gain=gain_max
+            self.GainText.SetValue(str(gain_max))
+        if string.atoi(channel)>channel_max:
+            channel = channel_max
+            self.ChannelText.SetValue(str(channel_max))
+        if string.atoi(rate)>rate_max:
+            rate = rate_max
+            self.RateText.SetValue(str(rate_max))
+        while gd.cmd_write!=None:
+            pass
+        gd.cmd_write = "\x3F\x11" + str(gain)+str(channel)+str(rate)
     def OnClickSaveToFile(self, event):
         if self.saveButton.GetValue() is True:
             self.isSavingFile = True    
@@ -397,21 +411,26 @@ class GraphFrame(wx.Frame):
         else:
             self.isSavingFile = False 
     
+    def OnClickGetAll(self, event):
+        event.Skip()
+        gd.cmd_write = "\x3F\x10"
+        while gd.cmd_write is not None:
+            wx.Sleep(0.01)
+        dlg = ParaPanel(None)
+        dlg.ShowModal()
+        pass
+        
     def OnClickClose(self, event):
         self.redraw_timer.Stop()
-        global isReadExit
-        global isWriteExit
-        isReadExit = True
-        isWriteExit = True
+        gd.isReadExit = True
+        gd.isWriteExit = True
         wx.Sleep(1)
         self.Destroy()
 
     def OnCloseWindow(self, event):
         self.redraw_timer.Stop()
-        global isReadExit
-        global isWriteExit
-        isReadExit = True
-        isWriteExit = True
+        gd.isReadExit = True
+        gd.isWriteExit = True
         wx.Sleep(1)
         self.Destroy()
 
@@ -427,23 +446,35 @@ class ReadThread(threading.Thread):
         self.sync = 0
         self.sync_last_byte = chr(0)
 
-
+    def unSign2Sign(self, x):
+        if x > 0x7fffff:
+            return x - 0x1000000
+        else:
+            return x
+        
     def process_data(self, buf, start_idx):
-        global sensor_data_lock
-        global teamperature_data
-        global pressure_data
         if ord(buf[start_idx]) & 0xF0 == 0x10:
             # data for temperature
-            sensor_data_lock.acquire()
+            gd.sensor_data_lock.acquire()
             for idx in range(0, 9):
-                temperature_data.append((ord(buf[start_idx+1+idx*2])<<8) | (ord(buf[start_idx+1+idx*2+1])))
-            sensor_data_lock.release()
+                gd.temperature_data.append((ord(buf[start_idx+1+idx*2])<<8) | (ord(buf[start_idx+1+idx*2+1])))
+            gd.sensor_data_lock.release()
         elif ord(buf[start_idx]) & 0xF0 == 0x20:
             # data for pressure
-            sensor_data_lock.acquire()
+            gd.sensor_data_lock.acquire()
             for idx in range(0, 6):
-                pressure_data.append(int((ord(buf[start_idx+1+idx*3])<<16) | (ord(buf[start_idx+1+idx*3+1])<<8) | (ord(buf[start_idx+1+idx*3+2]))))
-            sensor_data_lock.release()
+                unsignedValue = int((ord(buf[start_idx+1+idx*3])<<16) | (ord(buf[start_idx+1+idx*3+1])<<8) | (ord(buf[start_idx+1+idx*3+2])))
+                signedValue = self.unSign2Sign(unsignedValue) / 500
+                gd.pressure_data.append(signedValue)
+            gd.sensor_data_lock.release()
+        elif ord(buf[start_idx]) & 0xF0 == 0x30:
+            #data for parameter
+            gd.sensor_data_lock.acquire()
+            #append address and value
+            gd.parameterData.append(ord(buf[start_idx+1]))
+            gd.parameterData.append(ord(buf[start_idx+2]))
+            gd.sensor_data_lock.release()
+            
         else:
             print "data format error, unknown type: " + hex(ord(buf[0]))
 
@@ -456,7 +487,7 @@ class ReadThread(threading.Thread):
         try: 
             key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, path)
         except WindowsError:
-            raise IterationError
+            return
 
         for i in itertools.count():
             try:
@@ -466,8 +497,7 @@ class ReadThread(threading.Thread):
                 break
     
     def findAndOpenPort(self):
-        global gSerialDev
-        port = 1
+        port = "COM1"
         baud = 115200
         
         if self.commPort is None:
@@ -475,49 +505,46 @@ class ReadThread(threading.Thread):
         try:
             port = self.commPort.next()
             print "Try open " + port
-            port = port.lstrip('COM')
-            gSerialDev = serial.Serial(int(port)-1, baud)
-            print "Open COM"+port+" success"
+            gd.gSerialDev = serial.Serial(port, baud)
+            print "Open ", port
         except StopIteration:
             self.commPort.close()
             self.commPort = None
         except serial.SerialException:
             print "Open COM"+port+" failed"
-            gSerialDev = None
+            gd.gSerialDev = None
         
-        if gSerialDev is not None:
+        if gd.gSerialDev is not None:
             #read timeout 1 sec
-            gSerialDev.timeout = 0.1
+            #No read time out for test
+            #gd.gSerialDev.timeout = 0.1
             #write timeout 5 sec
-            gSerialDev.writeTimeout = 5
+            gd.gSerialDev.writeTimeout = 5
         
 
     def run(self):
-        global gSerialDev
-        global TempretureResult
-        global isReadExit
         self.syncTries = 0;
                 
-        while isReadExit==False:
-            #When the gSerialDev is None; Try open one port
-            if gSerialDev is None:
+        while gd.isReadExit==False:
+            #When the gd.gSerialDev is None; Try open one port
+            if gd.gSerialDev is None:
                 self.findAndOpenPort()
                 wx.Sleep(1)
             else:
                 if self.sync == 0:
                     # Not synchronized yet
-                    buf = gSerialDev.read(1)
+                    buf = gd.gSerialDev.read(1)
                     if len(buf) == 0:
                         # Read Timeout; try sync another time
                         self.syncTries = self.syncTries + 1
                         print "Try times="+str(self.syncTries)
                     else:
                         #reset timeout to 2 sec
-                        gSerialDev.timeout = 2
+                        gd.gSerialDev.timeout = 2
                         if ord(self.sync_last_byte) == 0x85 and ord(buf[0]) == 0x75:
                             #print "data synchronized"
                             self.sync = 1
-                            buf = gSerialDev.read(19)
+                            buf = gd.gSerialDev.read(19)
                             self.process_data(buf, 0)
                             continue
                         else:
@@ -525,10 +552,10 @@ class ReadThread(threading.Thread):
                             self.syncTries = self.syncTries + 1
                 else:
                     # Data synchronized
-                    buf = gSerialDev.read(21)
+                    buf = gd.gSerialDev.read(21)
                     if len(buf) == 0:
-                        gSerialDev.close()
-                        gSerialDev = None
+                        gd.gSerialDev.close()
+                        gd.gSerialDev = None
                         self.sync = 0
                         self.sync_last_byte = chr(0)
                     else:
@@ -542,13 +569,13 @@ class ReadThread(threading.Thread):
                 if self.syncTries > 21:
                     self.syncTries = 0
                     print "Try timeout, try next comm port\n"
-                    gSerialDev.close()
-                    gSerialDev = None
+                    gd.gSerialDev.close()
+                    gd.gSerialDev = None
                 
         #print "ExitRead"
-        if gSerialDev is not None:
-            gSerialDev.close()
-            gSerialDev = None
+        if gd.gSerialDev is not None:
+            gd.gSerialDev.close()
+            gd.gSerialDev = None
         if self.commPort is not None:
             self.commPort.close()
 
@@ -558,30 +585,28 @@ class WriteThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        global cmd_write
-        global gSerialDev
-        global isWriteExit
 
-        while isWriteExit==False:
-            if cmd_write != None and gSerialDev != None:
-                gSerialDev.write(cmd_write)
-                cmd_write = None
+        while gd.isWriteExit==False:
+            if gd.cmd_write != None and gd.gSerialDev != None:
+                print "write something"
+                gd.gSerialDev.write(gd.cmd_write)
+                gd.cmd_write = None
             else:
-                wx.Sleep(2)
+                wx.Sleep(0.002)
                 
         #print "Exit write"
-        if gSerialDev != None:
-            gSerialDev.close()
-            gSerialDev = None
+        if gd.gSerialDev != None:
+            gd.gSerialDev.close()
+            gd.gSerialDev = None
 
 if __name__ == '__main__':
 
     #Start read thread first and then start write thread
     readCommT = ReadThread()
-    isReadExit = False
+    gd.isReadExit = False
     readCommT.start()
     writeCommT = WriteThread()
-    isWriteExit = False
+    gd.isWriteExit = False
     writeCommT.start()
 
 #    app = wx.PySimpleApp()

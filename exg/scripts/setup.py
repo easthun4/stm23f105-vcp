@@ -75,7 +75,7 @@ setup(
                           "optimize": 2,
                           "ascii": 1,
                           "bundle_files": 1,
-                          "includes": ['matplotlib.figure', 'matplotlib.backends.backend_wxagg', 'numpy', 'pylab'],
+                          "includes": ['matplotlib.figure', 'matplotlib.backends.backend_wxagg', 'numpy', 'pylab', 'binascii'],
                           'excludes': ['_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg','_fltkagg', '_gtk', '_gtkcairo'],
                           "dll_excludes": ['libgdk-win32-2.0-0.dll','libgobject-2.0-0.dll']}
                },
